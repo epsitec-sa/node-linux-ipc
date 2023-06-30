@@ -110,25 +110,25 @@ module.exports = {
   closeSharedMemory,
 
   sharedMemoryFileMode: {
-    S_IRWXU: 0000700 /* [XSI] RWX mask for owner */,
-    S_IRUSR: 0000400 /* [XSI] R for owner */,
-    S_IWUSR: 0000200 /* [XSI] W for owner */,
-    S_IXUSR: 0000100 /* [XSI] X for owner */,
+    S_IRWXU: 0o700 /* [XSI] RWX mask for owner */,
+    S_IRUSR: 0o400 /* [XSI] R for owner */,
+    S_IWUSR: 0o200 /* [XSI] W for owner */,
+    S_IXUSR: 0o100 /* [XSI] X for owner */,
 
     /* Read, write, execute/search by group */
-    S_IRWXG: 0000070 /* [XSI] RWX mask for group */,
-    S_IRGRP: 0000040 /* [XSI] R for group */,
-    S_IWGRP: 0000020 /* [XSI] W for group */,
-    S_IXGRP: 0000010 /* [XSI] X for group */,
+    S_IRWXG: 0o70 /* [XSI] RWX mask for group */,
+    S_IRGRP: 0o40 /* [XSI] R for group */,
+    S_IWGRP: 0o20 /* [XSI] W for group */,
+    S_IXGRP: 0o10 /* [XSI] X for group */,
 
     /* Read, write, execute/search by others */
-    S_IRWXO: 0000007 /* [XSI] RWX mask for other */,
-    S_IROTH: 0000004 /* [XSI] R for other */,
-    S_IWOTH: 0000002 /* [XSI] W for other */,
-    S_IXOTH: 0000001 /* [XSI] X for other */,
+    S_IRWXO: 0o7 /* [XSI] RWX mask for other */,
+    S_IROTH: 0o4 /* [XSI] R for other */,
+    S_IWOTH: 0o2 /* [XSI] W for other */,
+    S_IXOTH: 0o1 /* [XSI] X for other */,
 
-    S_ISUID: 0004000 /* [XSI] set user id on execution */,
-    S_ISGID: 0002000 /* [XSI] set group id on execution */,
-    S_ISVTX: 0001000 /* [XSI] directory restrcted delete */,
+    S_ISUID: 0o4000 /* [XSI] set user id on execution */,
+    S_ISGID: 0o2000 /* [XSI] set group id on execution */,
+    S_ISVTX: 0o1000 /* [XSI] directory restrcted delete */,
   },
 };
