@@ -17,7 +17,7 @@
       ],
       "sources": [ "./src/dbus.cpp" ],
       "libraries": [
-          "ldbus-1"
+          "-ldbus-1"
       ],
     },
   ]
