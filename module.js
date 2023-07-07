@@ -104,9 +104,14 @@ function closeSharedMemory(handle) {
 }
 
 // dbus
-function initializeDBusConnection(serverName) {
+function initializeDBusConnection(serverName, busType, busFlags) {
   const handle = Buffer.alloc(dbusAddon.sizeof_DBusConnectionHandle);
-  const res = messagingAddon.InitializeDBusConnection(serverName, handle);
+  const res = dbusAddon.InitializeDBusConnection(
+    serverName,
+    busType,
+    busFlags,
+    handle
+  );
 
   if (res !== 0) {
     throw `could not initialize dbus connection ${serverName}: ${res}`;
@@ -114,7 +119,7 @@ function initializeDBusConnection(serverName) {
 
   return handle;
 }
-
+/*
 function sendMachPortMessage(handle, msgType, data, encoding, timeout) {
   const buf = bufferFromData(data, encoding);
   const res = messagingAddon.SendMachPortMessage(
@@ -160,13 +165,13 @@ function waitMachPortMessage(handle, encoding, timeout) {
       ? buf.toString(encoding).replace(/\0/g, "") // is a string, remove trailing \0 characters
       : buf,
   };
-}
+}*/
 
-function closeMachPort(handle) {
-  const res = messagingAddon.CloseMachPort(handle);
+function closeDBusConnection(handle) {
+  const res = dbusAddon.CloseDBusConnection(handle);
 
   if (res !== 0) {
-    throw `could not close mach port: ${res}`;
+    throw `could not close dbus connection: ${res}`;
   }
 }
 
@@ -178,6 +183,7 @@ module.exports = {
   closeSharedMemory,
 
   initializeDBusConnection,
+  closeDBusConnection,
 
   sharedMemoryFileMode: {
     S_IRWXU: 0o700 /* [XSI] RWX mask for owner */,
@@ -200,5 +206,15 @@ module.exports = {
     S_ISUID: 0o4000 /* [XSI] set user id on execution */,
     S_ISGID: 0o2000 /* [XSI] set group id on execution */,
     S_ISVTX: 0o1000 /* [XSI] directory restrcted delete */,
+  },
+  dbusBusType: {
+    DBUS_BUS_SESSION: 0,
+    DBUS_BUS_SYSTEM: 1,
+    DBUS_BUS_STARTER: 2,
+  },
+  dbusBusFlag: {
+    DBUS_NAME_FLAG_ALLOW_REPLACEMENT: 0x1,
+    DBUS_NAME_FLAG_REPLACE_EXISTING: 0x2,
+    DBUS_NAME_FLAG_DO_NOT_QUEUE: 0x4,
   },
 };

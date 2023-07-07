@@ -15,13 +15,15 @@ struct DBusConnectionHandle
     DBusConnection *conn;
 };
 
-// string serverName, DBusConnectionHandle* connHandle -> int
+// string serverName, int busType, int busFlags, DBusConnectionHandle* connHandle -> int
 NAPI_METHOD(InitializeDBusConnection)
 {
-    NAPI_ARGV(2)
+    NAPI_ARGV(4)
 
     NAPI_ARGV_UTF8(serverName, 1000, 0)
-    NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 1)
+    NAPI_ARGV_INT32(busType, 1)
+    NAPI_ARGV_INT32(busFlags, 2)
+    NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 3)
 
     DBusError err;
     DBusConnection *conn;
@@ -31,7 +33,22 @@ NAPI_METHOD(InitializeDBusConnection)
     dbus_error_init(&err);
 
     // connect to the bus and check for errors
-    conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+    DBusBusType bType = DBUS_BUS_SYSTEM;
+
+    if (busType == 0) // session
+    {
+        bType = DBUS_BUS_SESSION;
+    }
+    else if (busType == 1) // system
+    {
+        bType = DBUS_BUS_SYSTEM;
+    }
+    else if (busType == 2) // starter
+    {
+        bType = DBUS_BUS_STARTER;
+    }
+
+    conn = dbus_bus_get(bType, &err);
     if (dbus_error_is_set(&err))
     {
         printf("DBUS: Connection Error (%s)\n", err.message);
@@ -45,7 +62,7 @@ NAPI_METHOD(InitializeDBusConnection)
     }
 
     // request our name on the bus and check for errors
-    ret = dbus_bus_request_name(conn, serverName, DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
+    ret = dbus_bus_request_name(conn, serverName, busFlags, &err);
     if (dbus_error_is_set(&err))
     {
         printf("DBUS: Name Error (%s)\n", err.message);
@@ -58,7 +75,7 @@ NAPI_METHOD(InitializeDBusConnection)
         NAPI_RETURN_INT32(4);
     }
 
-    *pConn = conn;
+    connHandle->conn = conn;
 
     NAPI_RETURN_INT32(0)
 }
