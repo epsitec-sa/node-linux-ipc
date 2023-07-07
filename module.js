@@ -1,4 +1,5 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
+const dbusAddon = require("./build/Release/dbus");
 
 const sharedMemoryNameMaxLength = 32;
 
@@ -102,12 +103,81 @@ function closeSharedMemory(handle) {
   sharedMemoryAddon.CloseSharedMemory(handle);
 }
 
+// dbus
+function initializeDBusConnection(serverName) {
+  const handle = Buffer.alloc(dbusAddon.sizeof_DBusConnectionHandle);
+  const res = messagingAddon.InitializeDBusConnection(serverName, handle);
+
+  if (res !== 0) {
+    throw `could not initialize dbus connection ${serverName}: ${res}`;
+  }
+
+  return handle;
+}
+
+function sendMachPortMessage(handle, msgType, data, encoding, timeout) {
+  const buf = bufferFromData(data, encoding);
+  const res = messagingAddon.SendMachPortMessage(
+    handle,
+    msgType,
+    buf,
+    buf.byteLength,
+    timeout || 0
+  );
+
+  if (res === -1) {
+    throw `data size (${data.length()}) exceeded maximum msg content size (${machMessageMaxContentLength})`;
+  } else if (res === machSendTimedout) {
+    throw "timeout";
+  } else if (res !== 0) {
+    throw `could not send mach port message: ${res}`;
+  }
+}
+
+function waitMachPortMessage(handle, encoding, timeout) {
+  const buf = Buffer.alloc(machMessageMaxContentLength);
+  const msgTypeHandle = Buffer.alloc(messagingAddon.sizeof_MsgTypeHandle);
+
+  const res = messagingAddon.WaitMachPortMessage(
+    handle,
+    msgTypeHandle,
+    buf,
+    machMessageMaxContentLength,
+    timeout || 0
+  );
+
+  if (res === -1) {
+    throw `data buffer size is less than maximum content size (${machMessageMaxContentLength})`;
+  } else if (res === machReceiveTimedout) {
+    throw "timeout";
+  } else if (res !== 0) {
+    throw `could not wait mach port message: ${res}`;
+  }
+
+  return {
+    msgType: msgTypeHandle[0].valueOf(),
+    content: encoding
+      ? buf.toString(encoding).replace(/\0/g, "") // is a string, remove trailing \0 characters
+      : buf,
+  };
+}
+
+function closeMachPort(handle) {
+  const res = messagingAddon.CloseMachPort(handle);
+
+  if (res !== 0) {
+    throw `could not close mach port: ${res}`;
+  }
+}
+
 module.exports = {
   createSharedMemory,
   openSharedMemory,
   writeSharedData,
   readSharedData,
   closeSharedMemory,
+
+  initializeDBusConnection,
 
   sharedMemoryFileMode: {
     S_IRWXU: 0o700 /* [XSI] RWX mask for owner */,
