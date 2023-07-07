@@ -102,3 +102,67 @@ describe("WriteSharedMemorySerial", function () {
   });
 });
 */
+
+describe("CreateDBusConnection", function () {
+  it("should create a dbus connection", function () {
+    const handle = lib.initializeDBusConnection(
+      "epsitec.monolith.Test",
+      lib.dbusBusType.DBUS_BUS_SESSION,
+      lib.dbusBusFlag.DBUS_NAME_FLAG_REPLACE_EXISTING
+    );
+
+    assert.ok(handle);
+
+    lib.closeDBusConnection(handle);
+  });
+});
+
+/*
+describe("SendMachPortMessage", function () {
+  it("should send message through mach port", function () {
+    const rHandle = lib.initializeMachPortReceiver("testMachPort3");
+    const sHandle = lib.initializeMachPortSender("testMachPort3");
+
+    assert.ok(rHandle);
+    assert.ok(sHandle);
+
+    lib.sendMachPortMessage(sHandle, 1, "hello world");
+
+    lib.closeSharedMemory(sHandle);
+    lib.closeSharedMemory(rHandle);
+  });
+});
+
+describe("SendAndReceivedMachPortMessage", function () {
+  it("should send and received message through mach port", function () {
+    const rHandle = lib.initializeMachPortReceiver("testMachPort4");
+    const sHandle = lib.initializeMachPortSender("testMachPort4");
+
+    assert.ok(rHandle);
+    assert.ok(sHandle);
+
+    lib.sendMachPortMessage(sHandle, 1, "hello wòrld!!");
+    const msg = lib.waitMachPortMessage(rHandle, "utf8");
+
+    assert.strictEqual(1, msg.msgType);
+    assert.strictEqual("hello wòrld!!", msg.content);
+
+    lib.closeSharedMemory(sHandle);
+    lib.closeSharedMemory(rHandle);
+  });
+});
+
+describe("ReceivedMachPortMessageTimeout", function () {
+  it("should wait for message and throw timeout", function () {
+    const rHandle = lib.initializeMachPortReceiver("testMachPort5");
+
+    assert.ok(rHandle);
+
+    assert.throws(
+      () => lib.waitMachPortMessage(rHandle, "utf8", 500),
+      /timeout/
+    );
+
+    lib.closeSharedMemory(rHandle);
+  });
+});*/
