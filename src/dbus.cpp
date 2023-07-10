@@ -125,7 +125,7 @@ NAPI_METHOD(OpenDBusConnection)
 }
 
 // DBusConnectionHandle* connHandle, char *targetName, char *objectName, char *interfaceName, char *methodName, int cmdType, const byte* content, int contentLength -> int
-NAPI_METHOD(CallDBusMethodAsync)
+NAPI_METHOD(EnqueueDBusMethodCall)
 {
     NAPI_ARGV(8)
 
@@ -313,7 +313,7 @@ NAPI_INIT()
 {
     NAPI_EXPORT_FUNCTION(InitializeDBusConnection)
     NAPI_EXPORT_FUNCTION(OpenDBusConnection)
-    NAPI_EXPORT_FUNCTION(CallDBusMethodAsync)
+    NAPI_EXPORT_FUNCTION(EnqueueDBusMethodCall)
     NAPI_EXPORT_FUNCTION(ListenDBusMethodCall)
     NAPI_EXPORT_FUNCTION(CloseDBusConnection)
 

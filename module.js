@@ -138,7 +138,7 @@ function openDBusConnection(busType) {
   return handle;
 }
 
-function callDBusMethodAsync(
+function enqueueDBusMethodCall(
   handle,
   targetName,
   objectName,
@@ -152,7 +152,7 @@ function callDBusMethodAsync(
   const fInterface = interfaceName || targetName;
 
   const buf = bufferFromData(data || "", encoding);
-  const res = dbusAddon.CallDBusMethodAsync(
+  const res = dbusAddon.EnqueueDBusMethodCall(
     handle,
     targetName,
     fObject,
@@ -217,7 +217,7 @@ module.exports = {
   initializeDBusConnection,
   openDBusConnection,
   listenDBusMethodCall,
-  callDBusMethodAsync,
+  enqueueDBusMethodCall,
   closeDBusConnection,
 
   sharedMemoryFileMode: {

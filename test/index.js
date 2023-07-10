@@ -127,7 +127,7 @@ describe("CallDBUSMethod", function () {
     assert.ok(rHandle);
     assert.ok(sHandle);
 
-    lib.callDBusMethodAsync(
+    lib.enqueueDBusMethodCall(
       sHandle,
       "epsitec.monolith.Test3.receiver", // target for the method call
       "/epsitec/monolith/Test", // object to call on
@@ -148,7 +148,7 @@ describe("CallUpdaterDBUSMethod", function () {
 
     assert.ok(sHandle);
 
-    lib.callDBusMethodAsync(
+    lib.enqueueDBusMethodCall(
       sHandle,
       "epsitec.monolith.CresusUpdater", // target for the method call
       null, // object to call on
@@ -158,7 +158,7 @@ describe("CallUpdaterDBUSMethod", function () {
       null
     );
 
-    lib.callDBusMethodAsync(
+    lib.enqueueDBusMethodCall(
       sHandle,
       "epsitec.monolith.CresusUpdater", // target for the method call
       null, // object to call on
