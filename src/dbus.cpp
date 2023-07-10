@@ -304,6 +304,7 @@ NAPI_METHOD(CloseDBusConnection)
     NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 0)
 
     dbus_connection_flush(connHandle->conn);
+    dbus_connection_unref(connHandle->conn);
 
     NAPI_RETURN_INT32(0)
 }
