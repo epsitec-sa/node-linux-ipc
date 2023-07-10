@@ -107,8 +107,7 @@ describe("CreateDBusConnection", function () {
   it("should create a dbus connection", function () {
     const handle = lib.initializeDBusConnection(
       "epsitec.monolith.Test",
-      lib.dbusBusType.DBUS_BUS_SESSION,
-      lib.dbusBusFlag.DBUS_NAME_FLAG_REPLACE_EXISTING
+      lib.dbusBusType.DBUS_BUS_SESSION
     );
 
     assert.ok(handle);
@@ -117,52 +116,99 @@ describe("CreateDBusConnection", function () {
   });
 });
 
-/*
-describe("SendMachPortMessage", function () {
-  it("should send message through mach port", function () {
-    const rHandle = lib.initializeMachPortReceiver("testMachPort3");
-    const sHandle = lib.initializeMachPortSender("testMachPort3");
+describe("CallDBUSMethod", function () {
+  it("should call a method through dbus", function () {
+    const rHandle = lib.initializeDBusConnection(
+      "epsitec.monolith.Test3.receiver",
+      lib.dbusBusType.DBUS_BUS_SESSION
+    );
+    const sHandle = lib.openDBusConnection(lib.dbusBusType.DBUS_BUS_SESSION);
 
     assert.ok(rHandle);
     assert.ok(sHandle);
 
-    lib.sendMachPortMessage(sHandle, 1, "hello world");
-
-    lib.closeSharedMemory(sHandle);
-    lib.closeSharedMemory(rHandle);
-  });
-});
-
-describe("SendAndReceivedMachPortMessage", function () {
-  it("should send and received message through mach port", function () {
-    const rHandle = lib.initializeMachPortReceiver("testMachPort4");
-    const sHandle = lib.initializeMachPortSender("testMachPort4");
-
-    assert.ok(rHandle);
-    assert.ok(sHandle);
-
-    lib.sendMachPortMessage(sHandle, 1, "hello wòrld!!");
-    const msg = lib.waitMachPortMessage(rHandle, "utf8");
-
-    assert.strictEqual(1, msg.msgType);
-    assert.strictEqual("hello wòrld!!", msg.content);
-
-    lib.closeSharedMemory(sHandle);
-    lib.closeSharedMemory(rHandle);
-  });
-});
-
-describe("ReceivedMachPortMessageTimeout", function () {
-  it("should wait for message and throw timeout", function () {
-    const rHandle = lib.initializeMachPortReceiver("testMachPort5");
-
-    assert.ok(rHandle);
-
-    assert.throws(
-      () => lib.waitMachPortMessage(rHandle, "utf8", 500),
-      /timeout/
+    lib.callDBusMethodAsync(
+      sHandle,
+      "epsitec.monolith.Test3.receiver", // target for the method call
+      "/epsitec/monolith/Test", // object to call on
+      "epsitec.monolith.Test", // interface to call on
+      "Method",
+      1,
+      "hello world"
     );
 
-    lib.closeSharedMemory(rHandle);
+    lib.closeDBusConnection(sHandle);
+    lib.closeDBusConnection(rHandle);
   });
-});*/
+});
+
+describe("CallUpdaterDBUSMethod", function () {
+  it("should call a method on the updater through dbus", function () {
+    const sHandle = lib.openDBusConnection(lib.dbusBusType.DBUS_BUS_SYSTEM);
+
+    assert.ok(sHandle);
+
+    lib.callDBusMethodAsync(
+      sHandle,
+      "epsitec.monolith.CresusUpdater", // target for the method call
+      null, // object to call on
+      null, // interface to call on
+      "ExecuteCommand",
+      202, // ping
+      null
+    );
+
+    lib.callDBusMethodAsync(
+      sHandle,
+      "epsitec.monolith.CresusUpdater", // target for the method call
+      null, // object to call on
+      null, // interface to call on
+      "ExecuteCommand",
+      233, // setPortfolio
+      '{"Pid": "pid.12345"}'
+    );
+
+    lib.closeDBusConnection(sHandle);
+  });
+});
+/*
+describe("CallAndListenDBusMethod", function () {
+  it("should call and listen to a method through dbus", function (done) {
+    const rHandle = lib.initializeDBusConnection(
+      "epsitec.monolith.Test4.receiver",
+      lib.dbusBusType.DBUS_BUS_SESSION,
+      lib.dbusBusFlag.DBUS_NAME_FLAG_REPLACE_EXISTING
+    );
+    const sHandle = lib.openDBusConnection(lib.dbusBusType.DBUS_BUS_SESSION);
+
+    assert.ok(rHandle);
+    assert.ok(sHandle);
+
+    setImmediate(() => {
+      const msg = lib.listenDBusMethodCall(rHandle, null, "Method", "utf8");
+
+      lib.closeDBusConnection(sHandle);
+      lib.closeDBusConnection(rHandle);
+
+      if (1 !== msg.msgType) {
+        done(`msgType should be 1 but is ${msg.msgType}`);
+      }
+      if ("hello wòrld!!" !== msg.content) {
+        done(`content should be 'hello wòlrd!!' but is '${msg.content}'`);
+      }
+
+      done();
+    });
+
+    lib.callDBusMethodAsync(
+      sHandle,
+      "epsitec.monolith.Test4.receiver", // target for the method call
+      "/epsitec/monolith/Test", // object to call on
+      "epsitec.monolith.Test", // interface to call on
+      "Method",
+      1,
+      "hello wòrld!!!"
+    );
+  });
+});
+*/
