@@ -89,12 +89,12 @@ NAPI_METHOD(InitializeDBusConnection)
     {
         printf("DBUS: Name Error (%s)\n", err.message);
         dbus_error_free(&err);
-        NAPI_RETURN_INT32(3);
+        NAPI_RETURN_INT32(3)
     }
     if (DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret)
     {
         printf("DBUS: Not Primary Owner (%d)\n", ret);
-        NAPI_RETURN_INT32(4);
+        NAPI_RETURN_INT32(4)
     }
 
     connHandle->conn = conn;
@@ -205,7 +205,7 @@ NAPI_METHOD(ListenDBusMethodCall)
     if (argsBufferLength < DBUS_MESSAGE_MAX_LENGTH)
     {
         printf("the receive buffer length if less than %d\n", DBUS_MESSAGE_MAX_LENGTH);
-        NAPI_RETURN_INT32(1);
+        NAPI_RETURN_INT32(1)
     }
 
     while (true)
@@ -214,8 +214,9 @@ NAPI_METHOD(ListenDBusMethodCall)
         if (!dbus_connection_read_write(connHandle->conn, 0))
         {
             // not connected anymore
-            NAPI_RETURN_INT32(2);
+            NAPI_RETURN_INT32(2)
         }
+
         msg = dbus_connection_pop_message(connHandle->conn);
         // loop again if we haven't got a message
         if (NULL == msg)
@@ -252,7 +253,7 @@ NAPI_METHOD(ListenDBusMethodCall)
             // No arguments
             printf("no arguments are provided\n");
             dbus_message_unref(msg);
-            NAPI_RETURN_INT32(3);
+            NAPI_RETURN_INT32(3)
         }
 
         // first argument
@@ -260,7 +261,7 @@ NAPI_METHOD(ListenDBusMethodCall)
         {
             printf("type of first argument is wrong (not int)\n");
             dbus_message_unref(msg);
-            NAPI_RETURN_INT32(4);
+            NAPI_RETURN_INT32(4)
         }
         dbus_message_iter_get_basic(&args, cmdType);
 
@@ -272,7 +273,7 @@ NAPI_METHOD(ListenDBusMethodCall)
             {
                 printf("type of second argument is wrong (not string)\n");
                 dbus_message_unref(msg);
-                NAPI_RETURN_INT32(5);
+                NAPI_RETURN_INT32(5)
             }
             dbus_message_iter_get_basic(&args, &param);
         }
@@ -282,17 +283,17 @@ NAPI_METHOD(ListenDBusMethodCall)
         {
             printf("second argument is longer than available buffer\n");
             dbus_message_unref(msg);
-            NAPI_RETURN_INT32(6);
+            NAPI_RETURN_INT32(6)
         }
 
         strncpy(argsBuffer, param, paramLen);
         cmdTypeHandle->cmdType = *cmdType;
 
         dbus_message_unref(msg);
-        NAPI_RETURN_INT32(0);
+        NAPI_RETURN_INT32(0)
     }
 
-    NAPI_RETURN_INT32(1000); // should never happen
+    NAPI_RETURN_INT32(1000) // should never happen
 }
 
 // DBusConnectionHandle* connHandle -> int
