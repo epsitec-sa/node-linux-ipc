@@ -4,6 +4,12 @@ const dbusAddon = require("./build/Release/dbus");
 const sharedMemoryNameMaxLength = 32;
 const dBusMessageMaxContentLength = 4096;
 
+const dbusBusFlag = {
+  DBUS_NAME_FLAG_ALLOW_REPLACEMENT: 0x1,
+  DBUS_NAME_FLAG_REPLACE_EXISTING: 0x2,
+  DBUS_NAME_FLAG_DO_NOT_QUEUE: 0x4,
+};
+
 function isBuffer(value) {
   return (
     value &&
@@ -110,7 +116,7 @@ function initializeDBusConnection(serverName, busType, busFlags) {
   const res = dbusAddon.InitializeDBusConnection(
     serverName,
     busType,
-    busFlags,
+    busFlags || dbusBusFlag.DBUS_NAME_FLAG_REPLACE_EXISTING,
     handle
   );
 
@@ -120,33 +126,57 @@ function initializeDBusConnection(serverName, busType, busFlags) {
 
   return handle;
 }
-/*
-function sendMachPortMessage(handle, msgType, data, encoding, timeout) {
-  const buf = bufferFromData(data, encoding);
-  const res = messagingAddon.SendMachPortMessage(
+
+function openDBusConnection(busType) {
+  const handle = Buffer.alloc(dbusAddon.sizeof_DBusConnectionHandle);
+  const res = dbusAddon.OpenDBusConnection(busType, handle);
+
+  if (res !== 0) {
+    throw `could not open dbus connection: ${res}`;
+  }
+
+  return handle;
+}
+
+function callDBusMethodAsync(
+  handle,
+  targetName,
+  objectName,
+  interfaceName,
+  methodName,
+  cmdType,
+  data,
+  encoding
+) {
+  const fObject = objectName || `/${targetName.replaceAll(".", "/")}`;
+  const fInterface = interfaceName || targetName;
+
+  const buf = bufferFromData(data || "", encoding);
+  const res = dbusAddon.CallDBusMethodAsync(
     handle,
-    msgType,
+    targetName,
+    fObject,
+    fInterface,
+    methodName,
+    cmdType,
     buf,
-    buf.byteLength,
-    timeout || 0
+    buf.byteLength
   );
 
-  if (res === -1) {
-    throw `data size (${data.length()}) exceeded maximum msg content size (${machMessageMaxContentLength})`;
-  } else if (res === machSendTimedout) {
-    throw "timeout";
+  if (res === 1) {
+    throw `data size (${data.length()}) exceeded maximum msg content size (${dBusMessageMaxContentLength})`;
   } else if (res !== 0) {
-    throw `could not send mach port message: ${res}`;
+    throw `could not call dbus method: ${res}`;
   }
-}*/
+}
 
-function listenDBusMethodCall(handle, interfaceName, methodName) {
+function listenDBusMethodCall(handle, interfaceName, methodName, encoding) {
   const buf = Buffer.alloc(dBusMessageMaxContentLength);
   const cmdTypeHandle = Buffer.alloc(dbusAddon.sizeof_CmdTypeHandle);
 
   const res = dbusAddon.ListenDBusMethodCall(
     handle,
-    interfaceName,
+    interfaceName || "",
     methodName,
     cmdTypeHandle,
     buf,
@@ -185,7 +215,9 @@ module.exports = {
   closeSharedMemory,
 
   initializeDBusConnection,
+  openDBusConnection,
   listenDBusMethodCall,
+  callDBusMethodAsync,
   closeDBusConnection,
 
   sharedMemoryFileMode: {
@@ -215,9 +247,5 @@ module.exports = {
     DBUS_BUS_SYSTEM: 1,
     DBUS_BUS_STARTER: 2,
   },
-  dbusBusFlag: {
-    DBUS_NAME_FLAG_ALLOW_REPLACEMENT: 0x1,
-    DBUS_NAME_FLAG_REPLACE_EXISTING: 0x2,
-    DBUS_NAME_FLAG_DO_NOT_QUEUE: 0x4,
-  },
+  dbusBusFlag,
 };
