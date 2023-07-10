@@ -2,6 +2,7 @@ const sharedMemoryAddon = require("./build/Release/sharedMemory");
 const dbusAddon = require("./build/Release/dbus");
 
 const sharedMemoryNameMaxLength = 32;
+const dBusMessageMaxContentLength = 4096;
 
 function isBuffer(value) {
   return (
@@ -137,35 +138,36 @@ function sendMachPortMessage(handle, msgType, data, encoding, timeout) {
   } else if (res !== 0) {
     throw `could not send mach port message: ${res}`;
   }
-}
+}*/
 
-function waitMachPortMessage(handle, encoding, timeout) {
-  const buf = Buffer.alloc(machMessageMaxContentLength);
-  const msgTypeHandle = Buffer.alloc(messagingAddon.sizeof_MsgTypeHandle);
+function listenDBusMethodCall(handle, interfaceName, methodName) {
+  const buf = Buffer.alloc(dBusMessageMaxContentLength);
+  const cmdTypeHandle = Buffer.alloc(dbusAddon.sizeof_CmdTypeHandle);
 
-  const res = messagingAddon.WaitMachPortMessage(
+  const res = dbusAddon.ListenDBusMethodCall(
     handle,
-    msgTypeHandle,
+    interfaceName,
+    methodName,
+    cmdTypeHandle,
     buf,
-    machMessageMaxContentLength,
-    timeout || 0
+    dBusMessageMaxContentLength
   );
 
-  if (res === -1) {
-    throw `data buffer size is less than maximum content size (${machMessageMaxContentLength})`;
-  } else if (res === machReceiveTimedout) {
-    throw "timeout";
+  if (res === 1) {
+    throw `data buffer size is less than maximum content size (${dBusMessageMaxContentLength})`;
+  } else if (res === 2) {
+    throw "not connected anymore";
   } else if (res !== 0) {
-    throw `could not wait mach port message: ${res}`;
+    throw `could not listen to dbus method call: ${res}`;
   }
 
   return {
-    msgType: msgTypeHandle[0].valueOf(),
+    cmdType: cmdTypeHandle[0].valueOf(),
     content: encoding
       ? buf.toString(encoding).replace(/\0/g, "") // is a string, remove trailing \0 characters
       : buf,
   };
-}*/
+}
 
 function closeDBusConnection(handle) {
   const res = dbusAddon.CloseDBusConnection(handle);
@@ -183,6 +185,7 @@ module.exports = {
   closeSharedMemory,
 
   initializeDBusConnection,
+  listenDBusMethodCall,
   closeDBusConnection,
 
   sharedMemoryFileMode: {

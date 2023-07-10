@@ -15,6 +15,11 @@ struct DBusConnectionHandle
     DBusConnection *conn;
 };
 
+struct CmdTypeHandle
+{
+    int cmdType;
+};
+
 // string serverName, int busType, int busFlags, DBusConnectionHandle* connHandle -> int
 NAPI_METHOD(InitializeDBusConnection)
 {
@@ -124,45 +129,115 @@ NAPI_METHOD(SendMachPortMessage)
     }
 
     NAPI_RETURN_INT32(0)
-}
+}*/
 
-// MachPortHandle* machPortHandle, MsgTypeHandle* msgTypeHandle, char* msgBuffer, int msgBufferLength, int timeout -> int
-NAPI_METHOD(WaitMachPortMessage)
+// DBusConnectionHandle* connHandle, char *interfaceName, char *methodName, CmdTypeHandle *cmdTypeHandle, char *argsBuffer, int argsBufferLength -> int
+NAPI_METHOD(ListenDBusMethodCall)
 {
-    NAPI_ARGV(5)
+    NAPI_ARGV(6)
 
-    NAPI_ARGV_BUFFER_CAST(struct MachPortHandle *, machPortHandle, 0)
-    NAPI_ARGV_BUFFER_CAST(struct MsgTypeHandle *, msgTypeHandle, 1)
-    NAPI_ARGV_BUFFER_CAST(char *, msgBuffer, 2)
-    NAPI_ARGV_INT32(msgBufferLength, 3)
-    NAPI_ARGV_INT32(timeout, 4)
-    mach_message_receive message;
+    NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 0)
+    NAPI_ARGV_UTF8(interfaceName, 1000, 1)
+    NAPI_ARGV_UTF8(methodName, 1000, 2)
+    NAPI_ARGV_BUFFER_CAST(struct CmdTypeHandle *, cmdTypeHandle, 3)
+    NAPI_ARGV_BUFFER_CAST(char *, argsBuffer, 4)
+    NAPI_ARGV_INT32(argsBufferLength, 5)
+    DBusMessage *msg;
+    DBusMessageIter args;
+    int *cmdType;
 
-    if (msgBufferLength < MACH_MESSAGE_CONTENT_LENGTH)
+    if (argsBufferLength < DBUS_MESSAGE_MAX_LENGTH)
     {
-        NAPI_RETURN_INT32(-1)
+        printf("the receive buffer length if less than %d\n", DBUS_MESSAGE_MAX_LENGTH);
+        NAPI_RETURN_INT32(1);
     }
 
-    kern_return_t kr = mach_msg(
-        &message.header,                                     // Same as (mach_msg_header_t *) &message.
-        MACH_RCV_MSG | (timeout > 0 ? MACH_RCV_TIMEOUT : 0), // Options. We're receiving a message.
-        0,                                                   // Size of the message being sent, if sending.
-        sizeof(message),                                     // Size of the buffer for receiving.
-        machPortHandle->machPort,                            // The port to receive a message on.
-        timeout > 0 ? timeout : MACH_MSG_TIMEOUT_NONE,
-        MACH_PORT_NULL // Port for the kernel to send notifications about this message to.
-    );
-    if (kr != KERN_SUCCESS)
+    while (true)
     {
-        NAPI_RETURN_INT32(kr)
+        // non blocking read of the next available message
+        if (!dbus_connection_read_write(connHandle->conn, 0))
+        {
+            // not connected anymore
+            NAPI_RETURN_INT32(2);
+        }
+        msg = dbus_connection_pop_message(connHandle->conn);
+        // loop again if we haven't got a message
+        if (NULL == msg)
+        {
+            usleep(200);
+            continue;
+        }
+
+        if (interfaceName == NULL)
+        {
+            // only check method
+            char *method = (char *)dbus_message_get_member(msg);
+            if (strcmp(method, methodName) != 0)
+            {
+                // free the message
+                dbus_message_unref(msg);
+                continue;
+            }
+        }
+        else
+        {
+            // check interface and method
+            if (!dbus_message_is_method_call(msg, interfaceName, methodName))
+            {
+                // free the message
+                dbus_message_unref(msg);
+                continue;
+            }
+        }
+
+        // read the arguments
+        if (!dbus_message_iter_init(msg, &args))
+        {
+            // No arguments
+            printf("no arguments are provided\n");
+            dbus_message_unref(msg);
+            NAPI_RETURN_INT32(3);
+        }
+
+        // first argument
+        if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_INT32)
+        {
+            printf("type of first argument is wrong (not int)\n");
+            dbus_message_unref(msg);
+            NAPI_RETURN_INT32(4);
+        }
+        dbus_message_iter_get_basic(&args, cmdType);
+
+        char *param = "";
+        if (dbus_message_iter_next(&args))
+        {
+            // second argument is available
+            if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_STRING)
+            {
+                printf("type of second argument is wrong (not string)\n");
+                dbus_message_unref(msg);
+                NAPI_RETURN_INT32(5);
+            }
+            dbus_message_iter_get_basic(&args, &param);
+        }
+
+        int paramLen = strlen(param);
+        if (paramLen > argsBufferLength)
+        {
+            printf("second argument is longer than available buffer\n");
+            dbus_message_unref(msg);
+            NAPI_RETURN_INT32(6);
+        }
+
+        strncpy(argsBuffer, param, paramLen);
+        cmdTypeHandle->cmdType = *cmdType;
+
+        dbus_message_unref(msg);
+        NAPI_RETURN_INT32(0);
     }
 
-    strncpy(msgBuffer, message.content, MACH_MESSAGE_CONTENT_LENGTH);
-    msgTypeHandle->msgType = message.msgType;
-
-    NAPI_RETURN_INT32(0)
+    NAPI_RETURN_INT32(1000); // should never happen
 }
-*/
 
 // DBusConnectionHandle* connHandle -> int
 NAPI_METHOD(CloseDBusConnection)
@@ -180,9 +255,11 @@ NAPI_INIT()
 {
     NAPI_EXPORT_FUNCTION(InitializeDBusConnection)
     // NAPI_EXPORT_FUNCTION(SendMachPortMessage)
-    // NAPI_EXPORT_FUNCTION(WaitMachPortMessage)
+    NAPI_EXPORT_FUNCTION(ListenDBusMethodCall)
     NAPI_EXPORT_FUNCTION(CloseDBusConnection)
 
     NAPI_EXPORT_SIZEOF_STRUCT(DBusConnectionHandle)
     NAPI_EXPORT_ALIGNMENTOF(DBusConnectionHandle)
+    NAPI_EXPORT_SIZEOF_STRUCT(CmdTypeHandle)
+    NAPI_EXPORT_ALIGNMENTOF(CmdTypeHandle)
 }
