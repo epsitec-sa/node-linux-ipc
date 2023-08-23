@@ -50,7 +50,7 @@ int GetBus(int busType, DBusConnection **conn)
         dbus_error_free(&err);
         return 1;
     }
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         printf("DBUS: Connection Null\n");
         return 2;
@@ -144,7 +144,7 @@ NAPI_METHOD(EnqueueDBusMethodCall)
                                        objectName,    // object to call on
                                        interfaceName, // interface to call on
                                        methodName);   // method name
-    if (NULL == msg)
+    if (nullptr == msg)
     {
         printf("DBUS: Message Null\n");
         NAPI_RETURN_INT32(1)
@@ -172,7 +172,7 @@ NAPI_METHOD(EnqueueDBusMethodCall)
     }
 
     // send message and get a handle for a reply
-    if (!dbus_connection_send(connHandle->conn, msg, NULL))
+    if (!dbus_connection_send(connHandle->conn, msg, nullptr))
     {
         printf("DBUS: Out of memory!\n");
         dbus_message_unref(msg);
@@ -217,13 +217,13 @@ NAPI_METHOD(ListenDBusMethodCall)
 
         msg = dbus_connection_pop_message(connHandle->conn);
         // loop again if we haven't got a message
-        if (NULL == msg)
+        if (nullptr == msg)
         {
             usleep(200);
             continue;
         }
 
-        if (interfaceName == NULL)
+        if (interfaceName == nullptr)
         {
             // only check method
             char *method = (char *)dbus_message_get_member(msg);
