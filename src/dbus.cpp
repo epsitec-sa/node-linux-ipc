@@ -284,7 +284,7 @@ NAPI_METHOD(ListenDBusMethodCall)
             NAPI_RETURN_INT32(6)
         }
 
-        strncpy(argsBuffer, param, paramLen);
+        strncpy(argsBuffer, param, argsBufferLength);
         cmdTypeHandle->cmdType = *cmdType;
 
         dbus_message_unref(msg);
