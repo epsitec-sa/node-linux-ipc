@@ -198,7 +198,7 @@ NAPI_METHOD(ListenDBusMethodCall)
     NAPI_ARGV_INT32(argsBufferLength, 5)
     DBusMessage *msg;
     DBusMessageIter args;
-    int *cmdType;
+    int *cmdType = nullptr;
 
     if (argsBufferLength < DBUS_MESSAGE_MAX_LENGTH)
     {
