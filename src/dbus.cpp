@@ -263,7 +263,7 @@ NAPI_METHOD(ListenDBusMethodCall)
         }
         dbus_message_iter_get_basic(&args, cmdType);
 
-        char *param = "";
+        const char *param = "";
         if (dbus_message_iter_next(&args))
         {
             // second argument is available
