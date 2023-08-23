@@ -23,7 +23,6 @@ struct CmdTypeHandle
 int GetBus(int busType, DBusConnection **conn)
 {
     DBusError err;
-    int ret;
 
     // initialise the error
     dbus_error_init(&err);
@@ -110,7 +109,6 @@ NAPI_METHOD(OpenDBusConnection)
     NAPI_ARGV_INT32(busType, 0)
     NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 1)
 
-    DBusError err;
     DBusConnection *conn;
 
     int ret = GetBus(busType, &conn);
