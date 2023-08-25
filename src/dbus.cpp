@@ -23,7 +23,6 @@ struct CmdTypeHandle
 int GetBus(int busType, DBusConnection **conn)
 {
     DBusError err;
-    int ret;
 
     // initialise the error
     dbus_error_init(&err);
@@ -51,7 +50,8 @@ int GetBus(int busType, DBusConnection **conn)
         dbus_error_free(&err);
         return 1;
     }
-    if (NULL == *conn)
+
+    if (nullptr == *conn)
     {
         printf("DBUS: Connection Null\n");
         return 2;
@@ -110,7 +110,6 @@ NAPI_METHOD(OpenDBusConnection)
     NAPI_ARGV_INT32(busType, 0)
     NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 1)
 
-    DBusError err;
     DBusConnection *conn;
 
     int ret = GetBus(busType, &conn);
@@ -146,7 +145,7 @@ NAPI_METHOD(EnqueueDBusMethodCall)
                                        objectName,    // object to call on
                                        interfaceName, // interface to call on
                                        methodName);   // method name
-    if (NULL == msg)
+    if (nullptr == msg)
     {
         printf("DBUS: Message Null\n");
         NAPI_RETURN_INT32(1)
@@ -174,7 +173,7 @@ NAPI_METHOD(EnqueueDBusMethodCall)
     }
 
     // send message and get a handle for a reply
-    if (!dbus_connection_send(connHandle->conn, msg, NULL))
+    if (!dbus_connection_send(connHandle->conn, msg, nullptr))
     {
         printf("DBUS: Out of memory!\n");
         dbus_message_unref(msg);
@@ -201,7 +200,7 @@ NAPI_METHOD(ListenDBusMethodCall)
     NAPI_ARGV_INT32(timeoutMs, 6)
     DBusMessage *msg;
     DBusMessageIter args;
-    int *cmdType;
+    int *cmdType = nullptr;
 
     if (argsBufferLength < DBUS_MESSAGE_MAX_LENGTH)
     {
@@ -220,12 +219,12 @@ NAPI_METHOD(ListenDBusMethodCall)
 
         msg = dbus_connection_pop_message(connHandle->conn);
         // loop again if we haven't got a message
-        if (NULL == msg)
+        if (nullptr == msg)
         {
             continue;
         }
 
-        if (interfaceName == NULL)
+        if (interfaceName == nullptr)
         {
             // only check method
             char *method = (char *)dbus_message_get_member(msg);
@@ -265,7 +264,7 @@ NAPI_METHOD(ListenDBusMethodCall)
         }
         dbus_message_iter_get_basic(&args, cmdType);
 
-        char *param = "";
+        const char *param = "";
         if (dbus_message_iter_next(&args))
         {
             // second argument is available
@@ -286,7 +285,7 @@ NAPI_METHOD(ListenDBusMethodCall)
             NAPI_RETURN_INT32(6)
         }
 
-        strncpy(argsBuffer, param, paramLen);
+        strncpy(argsBuffer, param, argsBufferLength);
         cmdTypeHandle->cmdType = *cmdType;
 
         dbus_message_unref(msg);

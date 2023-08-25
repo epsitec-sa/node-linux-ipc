@@ -10,14 +10,15 @@
     },
     {
       "target_name": "dbus",
-      "include_dirs": [
-          "<!(node -e \"require('napi-macros')\")",
-          "/usr/include/dbus-1.0",
-          "/usr/lib/x86_64-linux-gnu/dbus-1.0/include"
-      ],
       "sources": [ "./src/dbus.cpp" ],
+      "include_dirs": [
+          "<!(node -e \"require('napi-macros')\")"
+      ],
+      "cflags": [
+          "<!@(pkg-config --cflags dbus-1)"
+      ],
       "libraries": [
-          "-ldbus-1"
+          "<!@(pkg-config --libs dbus-1)"
       ],
     },
   ]
