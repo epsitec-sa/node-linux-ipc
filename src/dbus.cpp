@@ -51,7 +51,7 @@ int GetBus(int busType, DBusConnection **conn)
         dbus_error_free(&err);
         return 1;
     }
-    if (NULL == conn)
+    if (NULL == *conn)
     {
         printf("DBUS: Connection Null\n");
         return 2;
