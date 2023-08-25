@@ -1,6 +1,6 @@
 {
   "name": "node-linux-ipc",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "https://github.com/epsitec-sa/node-linux-ipc",
   "main": "module.js",
   "os": [
