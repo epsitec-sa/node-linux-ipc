@@ -187,10 +187,10 @@ NAPI_METHOD(EnqueueDBusMethodCall)
     NAPI_RETURN_INT32(0)
 }
 
-// DBusConnectionHandle* connHandle, char *interfaceName, char *methodName, CmdTypeHandle *cmdTypeHandle, char *argsBuffer, int argsBufferLength -> int
+// DBusConnectionHandle* connHandle, char *interfaceName, char *methodName, CmdTypeHandle *cmdTypeHandle, char *argsBuffer, int argsBufferLength, int timeoutMs -> int
 NAPI_METHOD(ListenDBusMethodCall)
 {
-    NAPI_ARGV(6)
+    NAPI_ARGV(7)
 
     NAPI_ARGV_BUFFER_CAST(struct DBusConnectionHandle *, connHandle, 0)
     NAPI_ARGV_UTF8(interfaceName, 1000, 1)
@@ -198,6 +198,7 @@ NAPI_METHOD(ListenDBusMethodCall)
     NAPI_ARGV_BUFFER_CAST(struct CmdTypeHandle *, cmdTypeHandle, 3)
     NAPI_ARGV_BUFFER_CAST(char *, argsBuffer, 4)
     NAPI_ARGV_INT32(argsBufferLength, 5)
+    NAPI_ARGV_INT32(timeoutMs, 6)
     DBusMessage *msg;
     DBusMessageIter args;
     int *cmdType;
@@ -211,7 +212,7 @@ NAPI_METHOD(ListenDBusMethodCall)
     while (true)
     {
         // non blocking read of the next available message
-        if (!dbus_connection_read_write(connHandle->conn, 0))
+        if (!dbus_connection_read_write(connHandle->conn, timeoutMs))
         {
             // not connected anymore
             NAPI_RETURN_INT32(2)
@@ -221,7 +222,6 @@ NAPI_METHOD(ListenDBusMethodCall)
         // loop again if we haven't got a message
         if (NULL == msg)
         {
-            usleep(200);
             continue;
         }
 

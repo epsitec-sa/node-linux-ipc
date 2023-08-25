@@ -170,7 +170,13 @@ function enqueueDBusMethodCall(
   }
 }
 
-function listenDBusMethodCall(handle, interfaceName, methodName, encoding) {
+function listenDBusMethodCall(
+  handle,
+  interfaceName,
+  methodName,
+  encoding,
+  timeoutMs
+) {
   const buf = Buffer.alloc(dBusMessageMaxContentLength);
   const cmdTypeHandle = Buffer.alloc(dbusAddon.sizeof_CmdTypeHandle);
 
@@ -180,7 +186,8 @@ function listenDBusMethodCall(handle, interfaceName, methodName, encoding) {
     methodName,
     cmdTypeHandle,
     buf,
-    dBusMessageMaxContentLength
+    dBusMessageMaxContentLength,
+    timeoutMs !== null && timeoutMs !== undefined ? timeoutMs : -1 // default is infinite
   );
 
   if (res === 1) {
