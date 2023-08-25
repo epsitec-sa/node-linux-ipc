@@ -10,11 +10,13 @@
     },
     {
       "target_name": "dbus",
-      "include_dirs": [
-          "<!(node -e \"require('napi-macros')\")",
-          "<!@(pkg-config --cflags-only-I dbus-1 | sed s/-I//g)"
-      ],
       "sources": [ "./src/dbus.cpp" ],
+      "include_dirs": [
+          "<!(node -e \"require('napi-macros')\")"
+      ],
+      "cflags": [
+          "<!@(pkg-config --cflags dbus-1)"
+      ],
       "libraries": [
           "<!@(pkg-config --libs dbus-1)"
       ],
